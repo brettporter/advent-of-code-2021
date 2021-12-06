@@ -28,21 +28,30 @@ const Map = struct {
     pub fn applyVentLines(self: *Map, lines: []const VentLine) void {
         for (lines) |l| {
             if (l.start.x == l.end.x) {
-                // horizontal - start at smallest number
-                var y: i32 = std.math.min(l.start.y, l.end.y);
-                var end: i32 = std.math.max(l.start.y, l.end.y);
-                while (y <= end) : (y += 1) {
+                // horizontal
+                var direction: i32 = if (l.start.y < l.end.y) 1 else -1;
+                var y: i32 = l.start.y;
+                while (y != l.end.y + direction) : (y += direction) {
                     self.values[@intCast(usize, l.start.x)][@intCast(usize, y)] += 1;
                 }
             } else if (l.start.y == l.end.y) {
-                // vertical - start at smallest number
-                var x: i32 = std.math.min(l.start.x, l.end.x);
-                var end: i32 = std.math.max(l.start.x, l.end.x);
-                while (x <= end) : (x += 1) {
+                // vertical
+                var direction: i32 = if (l.start.x < l.end.x) 1 else -1;
+                var x: i32 = l.start.x;
+                while (x != l.end.x + direction) : (x += direction) {
                     self.values[@intCast(usize, x)][@intCast(usize, l.start.y)] += 1;
                 }
             } else {
-                unreachable();
+                // diagonal
+                var directionX: i32 = if (l.start.x < l.end.x) 1 else -1;
+                var directionY: i32 = if (l.start.y < l.end.y) 1 else -1;
+                var x: i32 = l.start.x;
+                var y: i32 = l.start.y;
+                while (x != l.end.x + directionX) {
+                    self.values[@intCast(usize, x)][@intCast(usize, y)] += 1;
+                    x += directionX;
+                    y += directionY;
+                }
             }
         }
     }
@@ -57,6 +66,17 @@ const Map = struct {
             }
         }
         return count;
+    }
+
+    pub fn printMap(self: *const Map, width: i32) void {
+        var y: usize = 0;
+        while (y < width) : (y += 1) {
+            var x: usize = 0;
+            while (x < width) : (x += 1) {
+                print("{d}", .{self.values[x][y]});
+            }
+            print("\n", .{});
+        }
     }
 };
 
@@ -84,10 +104,6 @@ fn parseVentLines(allocator: Allocator, input: [][]const u8) anyerror![]const Ve
             .start = try readPoint(it.next().?),
             .end = try readPoint(it.next().?),
         };
-
-        // currently only consider horizontal and vertical lines
-        if (ventLine.start.x != ventLine.end.x and ventLine.start.y != ventLine.end.y) continue;
-
         try list.append(ventLine);
     }
     return list.toOwnedSlice();
@@ -106,7 +122,7 @@ pub fn main() anyerror!void {
     var map = Map{};
     map.applyVentLines(ventLines);
 
-    print("Day 4: overlap = {d}\n", .{map.countOverlap()});
+    print("Day 5: overlap = {d}\n", .{map.countOverlap()});
 }
 
 // TESTING
@@ -135,5 +151,5 @@ test "Example" {
     var map = Map{};
     map.applyVentLines(ventLines);
 
-    try expect(map.countOverlap() == 5);
+    try expect(map.countOverlap() == 12);
 }
