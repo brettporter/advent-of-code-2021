@@ -14,4 +14,3 @@ pub fn readFile(allocator: std.mem.Allocator, filename: []const u8) anyerror![][
 
     return list.toOwnedSlice();
 }
-
