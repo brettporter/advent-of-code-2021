@@ -32,11 +32,13 @@ fn measureSlidingIncreases(depths: []const usize) usize {
 }
 
 pub fn main() anyerror!void {
-    var list = try common.readFile(test_allocator, "data/day1input.txt");
-    defer test_allocator.free(list);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
-    var depths = ArrayList(usize).init(test_allocator);
-    defer depths.deinit();
+    var list = try common.readFile(allocator, "data/day1input.txt");
+
+    var depths = ArrayList(usize).init(allocator);
 
     for (list) |line| {
         try depths.append(try std.fmt.parseInt(usize, line, 10));
