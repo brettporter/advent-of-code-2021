@@ -12,18 +12,23 @@ const Movement = union(Command) { forward: i32, up: i32, down: i32 };
 const Position = struct {
     position: i32 = 0,
     depth: i32 = 0,
+    aim: i32 = 0,
+
     fn answer(self: *Position) i32 {
         return self.position * self.depth;
     }
-};
 
-fn followDirection(position: *Position, direction: Movement) void {
-    switch (direction) {
-        .forward => |forward| position.position += forward,
-        .up => |up| position.depth -= up,
-        .down => |down| position.depth += down,
+    fn followDirection(self: *Position, direction: Movement) void {
+        switch (direction) {
+            .forward => |forward| {
+                self.position += forward;
+                self.depth += forward*self.aim;
+            },
+            .up => |up| self.aim -= up,
+            .down => |down| self.aim += down,
+        }
     }
-}
+};
 
 fn parseDirection(str: []const u8) anyerror!Movement {
     var iter = std.mem.split(u8, str, " ");
@@ -46,7 +51,7 @@ pub fn main() anyerror!void {
 
     var result = Position{};
     for (list) |item| {
-        followDirection(&result, try parseDirection(item));
+        result.followDirection(try parseDirection(item));
     }
 
     print("Day 2: position = {d}, depth = {d}, answer = {d}\n", .{ result.position, result.depth, result.answer() });
@@ -71,9 +76,9 @@ test "Example directions" {
 
     var result = Position{};
     for (directions) |d| {
-        followDirection(&result, d);
+        result.followDirection(d);
     }
     try expect(result.position == 15);
-    try expect(result.depth == 10);
-    try expect(result.answer() == 150);
+    try expect(result.depth == 60);
+    try expect(result.answer() == 900);
 }
