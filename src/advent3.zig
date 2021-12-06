@@ -95,8 +95,11 @@ fn readDiagnostics(diagnostics: []const []const u8) anyerror!Diagnostic {
 }
 
 pub fn main() anyerror!void {
-    var list = try common.readFile(test_allocator, "data/day3input.txt");
-    defer test_allocator.free(list);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+    var list = try common.readFile(allocator, "data/day3input.txt");
 
     var result = try readDiagnostics(list);
 
