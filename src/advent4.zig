@@ -12,6 +12,8 @@ const BingoCard = struct {
     values: [5][5]i8 = [_][5]i8{[_]i8{0} ** 5} ** 5,
     marked: [5][5]bool = [_][5]bool{[_]bool{false} ** 5} ** 5,
 
+    winningNumber: i8 = 0,
+
     pub fn markAndCheck(self: *BingoCard, num: i8) bool {
         var rowTotals: [5]i8 = [_]i8{0} ** 5;
         var colTotals: [5]i8 = [_]i8{0} ** 5;
@@ -29,11 +31,13 @@ const BingoCard = struct {
         }
         for (rowTotals) |total| {
             if (total == 5) {
+                self.winningNumber = num;
                 return true;
             }
         }
         for (colTotals) |total| {
             if (total == 5) {
+                self.winningNumber = num;
                 return true;
             }
         }
@@ -51,13 +55,15 @@ const BingoCard = struct {
         }
         return sum;
     }
+
+    pub fn answer(self: *const BingoCard) i32 {
+        return self.winningNumber * self.unmarkedTotal();
+    }
 };
 
 const BingoGame = struct {
     numbers: []i8,
     cards: []BingoCard,
-
-    winningNumber: i8 = 0,
 
     allocator: Allocator,
 
@@ -79,12 +85,11 @@ const BingoGame = struct {
     }
 
     pub fn playGame(self: *BingoGame) anyerror!*const BingoCard {
-        // Note if allowing replay, should reset card marking and winning number
+        // Note if allowing replay (e.g. with different numbers), should reset card marking and winning number
 
         for (self.numbers) |n| {
             for (self.cards) |*c| {
                 if (c.markAndCheck(n)) {
-                    self.winningNumber = n;
                     return c;
                 }
             }
@@ -92,8 +97,18 @@ const BingoGame = struct {
         return error.NoResult;
     }
 
-    pub fn answer(self: *const BingoGame, winningCard: *const BingoCard) i32 {
-        return self.winningNumber * winningCard.unmarkedTotal();
+    pub fn playSquidGame(self: *BingoGame) anyerror!*const BingoCard {
+        var squidCard: *const BingoCard = undefined;
+        for (self.numbers) |n| {
+            for (self.cards) |*c| {
+                if (c.winningNumber == 0) {
+                    if (c.markAndCheck(n)) {
+                        squidCard = c;
+                    }
+                }
+            }
+        }
+        return squidCard;
     }
 };
 
@@ -140,8 +155,10 @@ pub fn main() anyerror!void {
     defer game.deinit();
 
     var result = try game.playGame();
+    print("Day 4: winningNumber = {d}, unmarked = {d}, answer = {d}\n", .{ result.winningNumber, result.unmarkedTotal(), result.answer() });
 
-    print("Day 4: winningNumber = {d}, unmarked = {d}, answer = {d}\n", .{ game.winningNumber, result.unmarkedTotal(), game.answer(result) });
+    var squid = try game.playSquidGame();
+    print("Day 4 Squid: winningNumber = {d}, unmarked = {d}, answer = {d}\n", .{ squid.winningNumber, squid.unmarkedTotal(), squid.answer() });
 }
 
 test "Example" {
@@ -180,7 +197,13 @@ test "Example" {
 
     var result = try game.playGame();
 
-    try expect(game.winningNumber == 24);
+    try expect(result.winningNumber == 24);
     try expect(result.unmarkedTotal() == 188);
-    try expect(game.answer(result) == 4512);
+    try expect(result.answer() == 4512);
+
+    var squid = try game.playSquidGame();
+
+    try expect(squid.winningNumber == 13);
+    try expect(squid.unmarkedTotal() == 148);
+    try expect(squid.answer() == 1924);
 }
