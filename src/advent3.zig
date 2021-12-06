@@ -7,16 +7,16 @@ const expect = std.testing.expect;
 const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
-const PowerConsumption = struct {
+const Diagnostic = struct {
     gamma: i32,
     epsilon: i32,
 
-    fn value(self: *PowerConsumption) i32 {
+    fn powerConsumption(self: *Diagnostic) i32 {
         return self.gamma * self.epsilon;
     }
 };
 
-fn readDiagnostics(diagnostics: []const []const u8) anyerror!PowerConsumption {
+fn readDiagnostics(diagnostics: []const []const u8) anyerror!Diagnostic {
     const MAX_LENGTH = 31;
     var bitSum = [_]usize{0} ** MAX_LENGTH;
 
@@ -58,7 +58,7 @@ fn readDiagnostics(diagnostics: []const []const u8) anyerror!PowerConsumption {
     // flip bits of gamma to get epsilon since the answer is always opposite (we could also just subtract...)
     const epsilon = gamma ^ ((@as(i32, 1) << @intCast(u5, expectedLength)) - 1);
 
-    return PowerConsumption{ .gamma = gamma, .epsilon = epsilon };
+    return Diagnostic{ .gamma = gamma, .epsilon = epsilon };
 }
 
 pub fn main() anyerror!void {
@@ -67,7 +67,7 @@ pub fn main() anyerror!void {
 
     var result = try readDiagnostics(list);
 
-    print("Day 3: gamma = {d}, epsilon = {d}, answer = {d}\n", .{ result.gamma, result.epsilon, result.value() });
+    print("Day 3: gamma = {d}, epsilon = {d}, answer = {d}\n", .{ result.gamma, result.epsilon, result.powerConsumption() });
 }
 
 test "Example" {
@@ -77,7 +77,7 @@ test "Example" {
 
     try expect(result.gamma == 22);
     try expect(result.epsilon == 9);
-    try expect(result.value() == 198);
+    try expect(result.powerConsumption() == 198);
 }
 
 test "Odd length" {
@@ -87,7 +87,7 @@ test "Odd length" {
 
     try expect(result.gamma == 22); // 0b10110
     try expect(result.epsilon == 9); // 0b01001
-    try expect(result.value() == 198);
+    try expect(result.powerConsumption() == 198);
 }
 
 test "Undefined result" {
