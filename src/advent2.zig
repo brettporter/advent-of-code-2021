@@ -22,7 +22,7 @@ const Position = struct {
         switch (direction) {
             .forward => |forward| {
                 self.position += forward;
-                self.depth += forward*self.aim;
+                self.depth += forward * self.aim;
             },
             .up => |up| self.aim -= up,
             .down => |down| self.aim += down,
