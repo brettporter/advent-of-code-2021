@@ -10,52 +10,33 @@ const print = std.debug.print;
 
 // HELPERS
 
-const LanternFishSimulation = struct {
-    initialFish: []const i8,
-    currentFish: ArrayList(i8),
+fn simulateSingleLanternFish(fish: i8, days: i32) i128 {
+    const FISH_AGE = 7;
 
-    const Self = @This();
-    pub fn init(allocator: Allocator, fish: []const i8) !Self {
-        var result = Self{
-            .initialFish = fish,
-            .currentFish = ArrayList(i8).init(allocator),
-        };
-        try result.reset();
-        return result;
-    }
+    var newFish: i128 = 0;
+    var lifeSpan: i8 = fish;
+    var remaining: i32 = days;
+    while (remaining > lifeSpan) {
+        newFish += 1;
 
-    pub fn deinit(self: Self) void {
-        self.currentFish.deinit();
-    }
+        remaining -= lifeSpan;
+        lifeSpan = FISH_AGE;
 
-    pub fn reset(self: *LanternFishSimulation) !void {
-        self.currentFish.clearAndFree();
-        try self.currentFish.appendSlice(self.initialFish);
+        newFish += simulateSingleLanternFish(FISH_AGE + 1, remaining - 1);
     }
+    return newFish;
+}
 
-    fn simulateDay(self: *LanternFishSimulation, step: i8) !void {
-        var idx: usize = 0;
-        const len: usize = self.currentFish.items.len;
-        while (idx < len) : (idx += 1) {
-            self.currentFish.items[idx] -= step;
-            if (self.currentFish.items[idx] < 0) {
-                self.currentFish.items[idx] += 7;
-                try self.currentFish.append(self.currentFish.items[idx] + 2);
-            }
-        }
-    }
+fn simulateLanternFish(fish: []const i8, days: i32) i128 {
+    var count: i128 = 0;
+    for (fish) |f, idx| {
+        count += 1;
+        count += simulateSingleLanternFish(f, days);
 
-    pub fn simulateDays(self: *LanternFishSimulation, days: i32) !usize {
-        var i: i32 = 0;
-        while (i < days - 6) : (i += 6) {
-            try self.simulateDay(6);
-        }
-        while (i < days) : (i += 1) {
-            try self.simulateDay(1);
-        }
-        return self.currentFish.items.len;
+        print("{d}/{d}\t{d}\n", .{ idx, fish.len, count });
     }
-};
+    return count;
+}
 
 // MAIN
 
@@ -72,30 +53,22 @@ pub fn main() anyerror!void {
         try list.append(try std.fmt.parseInt(u4, n, 10));
     }
 
-    var simulation = try LanternFishSimulation.init(allocator, list.toOwnedSlice());
-    print("Day 6: total(80) = {d}\n", .{try simulation.simulateDays(80)});
-
-    try simulation.reset();
-    print("Day 6: total(256) = {d}\n", .{try simulation.simulateDays(256)});
+    const fish = list.toOwnedSlice();
+    print("Day 6: total(80) = {d}\n", .{simulateLanternFish(fish, 80)});
+    print("Day 6: total(256) = {d}\n", .{simulateLanternFish(fish, 256)});
 }
 
 // TESTING
 
 test "Example" {
     const values = [_]i8{ 3, 4, 3, 1, 2 };
-    var simulation = try LanternFishSimulation.init(test_allocator, values[0..]);
-    defer simulation.deinit();
 
-    var result = try simulation.simulateDays(18);
+    var result = simulateLanternFish(values[0..], 18);
     try expect(result == 26);
 
-    try simulation.reset();
-
-    result = try simulation.simulateDays(80);
+    result = simulateLanternFish(values[0..], 80);
     try expect(result == 5934);
 
-    try simulation.reset();
-
-    result = try simulation.simulateDays(256);
+    result = simulateLanternFish(values[0..], 256);
     try expect(result == 26984457539);
 }
