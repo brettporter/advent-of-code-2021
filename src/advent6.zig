@@ -54,15 +54,7 @@ pub fn main() anyerror!void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var input = try common.readFile(allocator, "data/day6input.txt");
-
-    var list = ArrayList(u8).init(allocator);
-    var iter = std.mem.split(u8, input[0], ",");
-    while (iter.next()) |n| {
-        try list.append(try std.fmt.parseInt(u4, n, 10));
-    }
-
-    const fish = list.toOwnedSlice();
+    const fish = try common.readFileCommaSepInt(allocator, "data/day6input.txt");
     print("Day 6: total(80) = {d}\n", .{simulateLanternFish(fish, 80)});
     print("Day 6: total(256) = {d}\n", .{simulateLanternFish(fish, 256)});
 }

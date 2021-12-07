@@ -12,6 +12,28 @@ pub fn readFile(allocator: std.mem.Allocator, filename: []const u8) anyerror![][
     return readLines(allocator, file.reader());
 }
 
+pub fn readFileCommaSepInt(allocator: std.mem.Allocator, filename: []const u8) anyerror![]const u8 {
+    var file = try std.fs.cwd().openFile(filename, .{});
+    defer file.close();
+
+    var buf_reader = io.bufferedReader(file.reader());
+    var in_stream = buf_reader.reader();
+
+    var list = std.ArrayList(u8).init(allocator);
+    defer list.deinit();
+
+    var input = try in_stream.readUntilDelimiterOrEofAlloc(allocator, '\n', 1024);
+
+    var iter = std.mem.split(u8, input.?, ",");
+    while (iter.next()) |n| {
+        try list.append(try std.fmt.parseInt(u8, n, 10));
+    }
+
+    return list.toOwnedSlice();
+}
+
+// PRIVATE
+
 fn readLines(allocator: std.mem.Allocator, reader: anytype) anyerror![][]const u8 {
     var buf_reader = io.bufferedReader(reader);
     var in_stream = buf_reader.reader();
