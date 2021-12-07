@@ -10,31 +10,44 @@ const print = std.debug.print;
 
 // HELPERS
 
+const CrabMovement = enum {
+    basic,
+    advanced,
+
+    pub fn calculate(self: CrabMovement, distance: i32) i32 {
+        return switch (self) {
+            .basic => distance,
+            .advanced => @divExact(distance * (distance + 1), 2),
+        };
+    }
+};
+
 const CrabFormation = struct {
     position: i32,
     movementTotal: i32,
 };
 
-fn calculateCost(values: []const i32, target: i32) i32 {
+fn calculateCost(movement: CrabMovement, values: []const i32, target: i32) i32 {
     var cost: i32 = 0;
     for (values) |v| {
-        cost += std.math.absInt(v - target) catch unreachable();
+        const distance = std.math.absInt(v - target) catch unreachable();
+        cost += movement.calculate(distance);
     }
     return cost;
 }
 
-fn findEfficientCrabFormation(values: []const i32) CrabFormation {
+fn findEfficientCrabFormation(movement: CrabMovement, values: []const i32) CrabFormation {
     var max: i32 = 0;
     for (values) |v| {
         if (v > max) max = v;
     }
 
-    var minCost = max * @intCast(i32, values.len);
+    var minCost: i32 = -1;
     var position: i32 = -1;
     var i: i32 = 0;
     while (i < max) : (i += 1) {
-        var cost = calculateCost(values, i);
-        if (cost < minCost) {
+        var cost = calculateCost(movement, values, i);
+        if (minCost == -1 or cost < minCost) {
             minCost = cost;
             position = i;
         }
@@ -54,27 +67,41 @@ pub fn main() anyerror!void {
 
     var input = try common.readFileCommaSepInt(allocator, "data/day7input.txt");
 
-    var result = findEfficientCrabFormation(input);
+    var result = findEfficientCrabFormation(CrabMovement.basic, input);
     print("Day 7: position = {d}, cost = {d}\n", .{ result.position, result.movementTotal });
+
+    result = findEfficientCrabFormation(CrabMovement.advanced, input);
+    print("Day 7 part 2: position = {d}, cost = {d}\n", .{ result.position, result.movementTotal });
 }
 
 // TESTING
 
-test "Example" {
-    const values = [_]i32{ 16, 1, 2, 0, 4, 2, 7, 1, 2, 14 };
-    const input = values[0..];
+const EXAMPLE_VALUES = [_]i32{ 16, 1, 2, 0, 4, 2, 7, 1, 2, 14 };
 
-    const result = findEfficientCrabFormation(input);
+test "Example" {
+    const input = EXAMPLE_VALUES[0..];
+
+    const result = findEfficientCrabFormation(CrabMovement.basic, input);
     try expect(result.position == 2);
     try expect(result.movementTotal == 37);
 }
 
-test "Calculate Fuel" {
-    const values = [_]i32{ 16, 1, 2, 0, 4, 2, 7, 1, 2, 14 };
-    const input = values[0..];
+test "Example Part 2" {
+    const input = EXAMPLE_VALUES[0..];
 
-    try expect(calculateCost(input, 2) == 37);
-    try expect(calculateCost(input, 1) == 41);
-    try expect(calculateCost(input, 3) == 39);
-    try expect(calculateCost(input, 10) == 71);
+    const result = findEfficientCrabFormation(CrabMovement.advanced, input);
+    try expect(result.position == 5);
+    try expect(result.movementTotal == 168);
+}
+
+test "Calculate Fuel" {
+    const input = EXAMPLE_VALUES[0..];
+
+    try expect(calculateCost(CrabMovement.basic, input, 2) == 37);
+    try expect(calculateCost(CrabMovement.basic, input, 1) == 41);
+    try expect(calculateCost(CrabMovement.basic, input, 3) == 39);
+    try expect(calculateCost(CrabMovement.basic, input, 10) == 71);
+
+    try expect(calculateCost(CrabMovement.advanced, input, 5) == 168);
+    try expect(calculateCost(CrabMovement.advanced, input, 2) == 206);
 }
