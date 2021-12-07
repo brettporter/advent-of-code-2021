@@ -10,12 +10,18 @@ const print = std.debug.print;
 
 // HELPERS
 
-fn simulateSingleLanternFish(fish: i8, days: i32) i128 {
+var memo: [9][300]u128 = [_][300]u128{[_]u128{0} ** 300} ** 9;
+
+fn simulateSingleLanternFish(fish: u8, days: u32) u128 {
+    if (memo[fish][days] > 0) {
+        return memo[fish][days];
+    }
+
     const FISH_AGE = 7;
 
-    var newFish: i128 = 0;
-    var lifeSpan: i8 = fish;
-    var remaining: i32 = days;
+    var newFish: u128 = 0;
+    var lifeSpan: u8 = fish;
+    var remaining: u32 = days;
     while (remaining > lifeSpan) {
         newFish += 1;
 
@@ -24,11 +30,14 @@ fn simulateSingleLanternFish(fish: i8, days: i32) i128 {
 
         newFish += simulateSingleLanternFish(FISH_AGE + 1, remaining - 1);
     }
+
+    memo[fish][days] = newFish;
+
     return newFish;
 }
 
-fn simulateLanternFish(fish: []const i8, days: i32) i128 {
-    var count: i128 = 0;
+fn simulateLanternFish(fish: []const u8, days: u32) u128 {
+    var count: u128 = 0;
     for (fish) |f, idx| {
         count += 1;
         count += simulateSingleLanternFish(f, days);
@@ -47,7 +56,7 @@ pub fn main() anyerror!void {
 
     var input = try common.readFile(allocator, "data/day6input.txt");
 
-    var list = ArrayList(i8).init(allocator);
+    var list = ArrayList(u8).init(allocator);
     var iter = std.mem.split(u8, input[0], ",");
     while (iter.next()) |n| {
         try list.append(try std.fmt.parseInt(u4, n, 10));
@@ -61,7 +70,7 @@ pub fn main() anyerror!void {
 // TESTING
 
 test "Example" {
-    const values = [_]i8{ 3, 4, 3, 1, 2 };
+    const values = [_]u8{ 3, 4, 3, 1, 2 };
 
     var result = simulateLanternFish(values[0..], 18);
     try expect(result == 26);
