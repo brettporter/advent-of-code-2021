@@ -73,7 +73,10 @@ pub fn main() anyerror!void {
     }
 
     var simulation = try LanternFishSimulation.init(allocator, list.toOwnedSlice());
-    print("Day 6: total = {d}\n", .{try simulation.simulateDays(80)});
+    print("Day 6: total(80) = {d}\n", .{try simulation.simulateDays(80)});
+
+    try simulation.reset();
+    print("Day 6: total(256) = {d}\n", .{try simulation.simulateDays(256)});
 }
 
 // TESTING
