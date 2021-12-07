@@ -12,7 +12,7 @@ const print = std.debug.print;
 
 var memo: [9][300]u128 = [_][300]u128{[_]u128{0} ** 300} ** 9;
 
-fn simulateSingleLanternFish(fish: u8, days: u32) u128 {
+fn simulateSingleLanternFish(fish: u16, days: u32) u128 {
     if (memo[fish][days] > 0) {
         return memo[fish][days];
     }
@@ -20,7 +20,7 @@ fn simulateSingleLanternFish(fish: u8, days: u32) u128 {
     const FISH_AGE = 7;
 
     var newFish: u128 = 0;
-    var lifeSpan: u8 = fish;
+    var lifeSpan: u16 = fish;
     var remaining: u32 = days;
     while (remaining > lifeSpan) {
         newFish += 1;
@@ -36,11 +36,11 @@ fn simulateSingleLanternFish(fish: u8, days: u32) u128 {
     return newFish;
 }
 
-fn simulateLanternFish(fish: []const u8, days: u32) u128 {
+fn simulateLanternFish(fish: []const i32, days: u32) u128 {
     var count: u128 = 0;
     for (fish) |f, idx| {
         count += 1;
-        count += simulateSingleLanternFish(f, days);
+        count += simulateSingleLanternFish(@intCast(u16, f), days);
 
         print("{d}/{d}\t{d}\n", .{ idx, fish.len, count });
     }
@@ -62,7 +62,7 @@ pub fn main() anyerror!void {
 // TESTING
 
 test "Example" {
-    const values = [_]u8{ 3, 4, 3, 1, 2 };
+    const values = [_]i32{ 3, 4, 3, 1, 2 };
 
     var result = simulateLanternFish(values[0..], 18);
     try expect(result == 26);
