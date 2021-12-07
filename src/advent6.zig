@@ -38,11 +38,9 @@ fn simulateSingleLanternFish(fish: u16, days: u32) u128 {
 
 fn simulateLanternFish(fish: []const i32, days: u32) u128 {
     var count: u128 = 0;
-    for (fish) |f, idx| {
+    for (fish) |f| {
         count += 1;
         count += simulateSingleLanternFish(@intCast(u16, f), days);
-
-        print("{d}/{d}\t{d}\n", .{ idx, fish.len, count });
     }
     return count;
 }
