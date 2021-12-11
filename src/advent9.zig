@@ -10,8 +10,14 @@ const print = std.debug.print;
 
 // HELPERS
 
-fn calculateRisk(input: [][]const u8) i32 {
-    var risk: i32 = 0;
+const Point = struct {
+    row: i32,
+    col: i32,
+    value: i32,
+};
+
+fn findLowPoints(allocator: Allocator, input: [][]const u8) ![]Point {
+    var lowPoints = ArrayList(Point).init(allocator);
     for (input) |row, ridx| {
         for (row) |col, cidx| {
             // left
@@ -23,8 +29,16 @@ fn calculateRisk(input: [][]const u8) i32 {
             // down
             if (ridx < input.len - 1 and input[ridx + 1][cidx] <= col) continue;
 
-            risk += (col - '0' + 1);
+            try lowPoints.append(Point{ .row = @intCast(i32, ridx), .col = @intCast(i32, cidx), .value = col - '0' });
         }
+    }
+    return lowPoints.toOwnedSlice();
+}
+
+fn calculateRisk(lowPoints: []Point) i32 {
+    var risk: i32 = 0;
+    for (lowPoints) |p| {
+        risk += (p.value + 1);
     }
     return risk;
 }
@@ -37,7 +51,8 @@ pub fn main() anyerror!void {
     const allocator = arena.allocator();
 
     var input = try common.readFile(allocator, "data/day9input.txt");
-    print("Day 9: risk = {d}\n", .{calculateRisk(input)});
+    var lowPoints = try findLowPoints(allocator, input);
+    print("Day 9: risk = {d}\n", .{calculateRisk(lowPoints)});
 }
 
 // TESTING
@@ -57,7 +72,9 @@ test "Example" {
         test_allocator.free(input);
     }
 
-    var result = calculateRisk(input);
+    var lowPoints = try findLowPoints(test_allocator, input);
+    defer test_allocator.free(lowPoints);
+    var result = calculateRisk(lowPoints);
     try expect(result == 15);
 }
 
@@ -71,6 +88,8 @@ test "Equal pair" {
         test_allocator.free(input);
     }
 
-    var result = calculateRisk(input);
+    var lowPoints = try findLowPoints(test_allocator, input);
+    defer test_allocator.free(lowPoints);
+    var result = calculateRisk(lowPoints);
     try expect(result == 14);
 }
