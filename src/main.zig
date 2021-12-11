@@ -12,6 +12,7 @@ pub fn main() anyerror!void {
     try @import("advent7.zig").main();
     try @import("advent8.zig").main();
     try @import("advent9.zig").main();
+    try @import("advent10.zig").main();
 }
 
 test "basic test" {
