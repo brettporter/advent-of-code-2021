@@ -11,9 +11,9 @@ const print = std.debug.print;
 // HELPERS
 
 const Point = struct {
-    row: i32,
-    col: i32,
-    value: i32,
+    row: usize,
+    col: usize,
+    value: i32 = 0,
 };
 
 fn findLowPoints(allocator: Allocator, input: [][]const u8) ![]Point {
@@ -29,7 +29,7 @@ fn findLowPoints(allocator: Allocator, input: [][]const u8) ![]Point {
             // down
             if (ridx < input.len - 1 and input[ridx + 1][cidx] <= col) continue;
 
-            try lowPoints.append(Point{ .row = @intCast(i32, ridx), .col = @intCast(i32, cidx), .value = col - '0' });
+            try lowPoints.append(Point{ .row = ridx, .col = cidx, .value = col - '0' });
         }
     }
     return lowPoints.toOwnedSlice();
@@ -43,6 +43,54 @@ fn calculateRisk(lowPoints: []Point) i32 {
     return risk;
 }
 
+fn traverseBasin(input: [][]const u8, seen: []bool, point: Point) i32 {
+    // check and set seen
+    var sidx: usize = point.row * input[0].len + point.col;
+    if (seen[sidx]) return 0;
+    seen[sidx] = true;
+
+    var result: i32 = 1;
+
+    // left
+    if (point.col > 0 and input[point.row][point.col - 1] != '9') {
+        result += traverseBasin(input, seen, Point{ .row = point.row, .col = point.col - 1 });
+    }
+    // right
+    if (point.col < input[point.row].len - 1 and input[point.row][point.col + 1] != '9') {
+        result += traverseBasin(input, seen, Point{ .row = point.row, .col = point.col + 1 });
+    }
+    // up
+    if (point.row > 0 and input[point.row - 1][point.col] != '9') {
+        result += traverseBasin(input, seen, Point{ .row = point.row - 1, .col = point.col });
+    }
+    // down
+    if (point.row < input.len - 1 and input[point.row + 1][point.col] != '9') {
+        result += traverseBasin(input, seen, Point{ .row = point.row + 1, .col = point.col });
+    }
+    return result;
+}
+
+fn findThreeLargestBasins(allocator: Allocator, input: [][]const u8, lowPoints: []Point) !i32 {
+    var seen = try allocator.alloc(bool, input.len * input[0].len);
+    var basinSizes = ArrayList(i32).init(allocator);
+    defer {
+        basinSizes.deinit();
+        allocator.free(seen);
+    }
+
+    for (lowPoints) |p| {
+        try basinSizes.append(traverseBasin(input, seen, p));
+    }
+
+    std.sort.sort(i32, basinSizes.items, {}, comptime std.sort.desc(i32));
+
+    var totalSize: i32 = 1;
+    for (basinSizes.items[0..3]) |i| {
+        totalSize *= i;
+    }
+    return totalSize;
+}
+
 // MAIN
 
 pub fn main() anyerror!void {
@@ -53,6 +101,7 @@ pub fn main() anyerror!void {
     var input = try common.readFile(allocator, "data/day9input.txt");
     var lowPoints = try findLowPoints(allocator, input);
     print("Day 9: risk = {d}\n", .{calculateRisk(lowPoints)});
+    print("Day 9: largest basins = {d}\n", .{findThreeLargestBasins(allocator, input, lowPoints)});
 }
 
 // TESTING
@@ -76,6 +125,9 @@ test "Example" {
     defer test_allocator.free(lowPoints);
     var result = calculateRisk(lowPoints);
     try expect(result == 15);
+
+    var result2 = try findThreeLargestBasins(test_allocator, input, lowPoints);
+    try expect(result2 == 1134);
 }
 
 test "Equal pair" {
