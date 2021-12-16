@@ -100,6 +100,17 @@ fn processSteps(data: []u8, width: usize, steps: i32) i32 {
     return total;
 }
 
+fn findSimultaneousFlash(data: []u8, width: usize) !i32 {
+    var step: i32 = 1;
+    while (step < 10000) : (step += 1) {
+        _ = processStep(data, width);
+        if (std.mem.allEqual(u8, data, 0)) {
+            return step;
+        }
+    }
+    return error.NotFound;
+}
+
 // MAIN
 
 pub fn main() anyerror!void {
@@ -109,6 +120,7 @@ pub fn main() anyerror!void {
 
     var input = try common.readFile(allocator, "data/day11input.txt");
     print("Day 11: total flashes = {d}\n", .{processSteps(try parseArrayLines(allocator, input), 10, 100)});
+    print("Day 11: sync = {d}\n", .{findSimultaneousFlash(try parseArrayLines(allocator, input), 10)});
 }
 
 // TESTING
@@ -201,6 +213,14 @@ test "Example Step 100" {
     var total: i32 = processSteps(input, 10, 100);
     try expect(std.mem.eql(u8, input, step100) == true);
     try expect(total == 1656);
+}
+
+test "Example Simultaneous Flash" {
+    const input = try parseArray(test_allocator, EXAMPLE);
+    defer test_allocator.free(input);
+
+    var step: i32 = try findSimultaneousFlash(input, 10);
+    try expect(step == 195);
 }
 
 fn printMatrix(input: []u8, width: usize) void {
