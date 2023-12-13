@@ -1,8 +1,6 @@
 const std = @import("std");
 
 pub fn main() anyerror!void {
-    std.log.info("All your codebase are belong to us.", .{});
-
     try @import("advent1.zig").main();
     try @import("advent2.zig").main();
     try @import("advent3.zig").main();

@@ -4,7 +4,6 @@ const ArrayList = std.ArrayList;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 fn measureIncreases(depths: []const usize) usize {
@@ -20,7 +19,7 @@ fn measureIncreases(depths: []const usize) usize {
 fn measureSlidingIncreases(depths: []const usize) usize {
     var count: usize = 0;
     var previous: usize = undefined;
-    for (depths) |_, index| {
+    for (depths, 0..) |_, index| {
         var sum: usize = 0;
         var end = if (index < depths.len - 3) index + 3 else depths.len;
         for (depths[index..end]) |v| sum += v;

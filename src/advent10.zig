@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 // HELPERS
@@ -96,7 +95,7 @@ fn scoreCompletion(input: []const u8) u64 {
 }
 
 fn findWinner(scores: []u64) u64 {
-    std.sort.sort(u64, scores, {}, comptime std.sort.desc(u64));
+    std.mem.sort(u64, scores, {}, comptime std.sort.desc(u64));
     return scores[(scores.len - 1) / 2];
 }
 
@@ -129,8 +128,8 @@ pub fn main() anyerror!void {
     const allocator = arena.allocator();
 
     var input = try common.readFile(allocator, "data/day10input.txt");
-    print("Day 10: syntax error = {d}\n", .{calculateSyntaxError(allocator, input)});
-    print("Day 10: completion score = {d}\n", .{calculateCompletionScore(allocator, input)});
+    print("Day 10: syntax error = {!d}\n", .{calculateSyntaxError(allocator, input)});
+    print("Day 10: completion score = {!d}\n", .{calculateCompletionScore(allocator, input)});
 }
 
 // TESTING
@@ -149,6 +148,7 @@ const EXAMPLE =
 ;
 
 test "Example" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator, EXAMPLE);
     defer {
         for (input) |i| test_allocator.free(i);
@@ -160,6 +160,7 @@ test "Example" {
 }
 
 test "Check corrupt chunks" {
+    const test_allocator = std.testing.test_allocator;
     try expect((try checkChunkCorruption(test_allocator, "()")) == ResultType.ok);
     try expect((try checkChunkCorruption(test_allocator, "[]")) == ResultType.ok);
     try expect((try checkChunkCorruption(test_allocator, "([])")) == ResultType.ok);

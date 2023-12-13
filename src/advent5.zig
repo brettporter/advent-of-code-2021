@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 // HELPERS
@@ -32,14 +31,14 @@ const Map = struct {
                 var direction: i32 = if (l.start.y < l.end.y) 1 else -1;
                 var y: i32 = l.start.y;
                 while (y != l.end.y + direction) : (y += direction) {
-                    self.values[@intCast(usize, l.start.x)][@intCast(usize, y)] += 1;
+                    self.values[@as(usize, @intCast(l.start.x))][@as(usize, @intCast(y))] += 1;
                 }
             } else if (l.start.y == l.end.y) {
                 // vertical
                 var direction: i32 = if (l.start.x < l.end.x) 1 else -1;
                 var x: i32 = l.start.x;
                 while (x != l.end.x + direction) : (x += direction) {
-                    self.values[@intCast(usize, x)][@intCast(usize, l.start.y)] += 1;
+                    self.values[@as(usize, @intCast(x))][@as(usize, @intCast(l.start.y))] += 1;
                 }
             } else {
                 // diagonal
@@ -48,7 +47,7 @@ const Map = struct {
                 var x: i32 = l.start.x;
                 var y: i32 = l.start.y;
                 while (x != l.end.x + directionX) {
-                    self.values[@intCast(usize, x)][@intCast(usize, y)] += 1;
+                    self.values[@as(usize, @intCast(x))][@as(usize, @intCast(y))] += 1;
                     x += directionX;
                     y += directionY;
                 }
@@ -128,6 +127,7 @@ pub fn main() anyerror!void {
 // TESTING
 
 test "Example" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator,
         \\0,9 -> 5,9
         \\8,0 -> 0,8

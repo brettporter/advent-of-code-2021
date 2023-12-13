@@ -4,7 +4,7 @@ const ArrayList = std.ArrayList;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
+const test_allocator = std.heap.page_allocator; // TODO: better alternative
 const print = std.debug.print;
 
 const Diagnostic = struct {
@@ -34,7 +34,7 @@ fn bitCriteria(idx: usize, values: []const []const u8) anyerror!u1 {
         }
     }
 
-    const count = std.mem.len(values);
+    const count = values.len;
     if (sum * 2 >= count) {
         // if the total is greater than half, then 1 is the most common value, add it to gamma at this bit position
         // if exactly half, then we use 1 per rules of part 2
@@ -67,13 +67,13 @@ fn filterDiagnostics(diagnostics: []const []const u8, idx: usize, wantMatch: boo
 }
 
 fn readDiagnostics(diagnostics: []const []const u8) anyerror!Diagnostic {
-    const expectedLength = std.mem.len(diagnostics[0]);
+    const expectedLength = diagnostics[0].len;
     if (expectedLength > 31) {
         // Only support 31 bits for u5 below
         return error.SizeError;
     }
     for (diagnostics) |d| {
-        if (std.mem.len(d) != expectedLength) {
+        if (d.len != expectedLength) {
             return error.SizeError;
         }
     }
@@ -82,11 +82,11 @@ fn readDiagnostics(diagnostics: []const []const u8) anyerror!Diagnostic {
     var i: usize = 0;
     while (i < expectedLength) : (i += 1) {
         var c = try bitCriteria(i, diagnostics);
-        if (c == 1) gamma += @as(i32, 1) << @intCast(u5, expectedLength - i - 1);
+        if (c == 1) gamma += @as(i32, 1) << @as(u5, @intCast(expectedLength - i - 1));
     }
 
     // flip bits of gamma to get epsilon since the answer is always opposite (we could also just subtract...)
-    const epsilon = gamma ^ ((@as(i32, 1) << @intCast(u5, expectedLength)) - 1);
+    const epsilon = gamma ^ ((@as(i32, 1) << @as(u5, @intCast(expectedLength))) - 1);
 
     const oxygen = try filterDiagnostics(diagnostics, 0, true);
     const co2scrubber = try filterDiagnostics(diagnostics, 0, false);

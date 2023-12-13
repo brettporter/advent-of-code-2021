@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 // HELPERS
@@ -40,7 +39,7 @@ fn simulateLanternFish(fish: []const i32, days: u32) u128 {
     var count: u128 = 0;
     for (fish) |f| {
         count += 1;
-        count += simulateSingleLanternFish(@intCast(u16, f), days);
+        count += simulateSingleLanternFish(@as(u16, @intCast(f)), days);
     }
     return count;
 }

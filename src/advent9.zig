@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 // HELPERS
@@ -18,8 +17,8 @@ const Point = struct {
 
 fn findLowPoints(allocator: Allocator, input: [][]const u8) ![]Point {
     var lowPoints = ArrayList(Point).init(allocator);
-    for (input) |row, ridx| {
-        for (row) |col, cidx| {
+    for (input, 0..) |row, ridx| {
+        for (row, 0..) |col, cidx| {
             // left
             if (cidx > 0 and row[cidx - 1] <= col) continue;
             // right
@@ -82,7 +81,7 @@ fn findThreeLargestBasins(allocator: Allocator, input: [][]const u8, lowPoints: 
         try basinSizes.append(traverseBasin(input, seen, p));
     }
 
-    std.sort.sort(i32, basinSizes.items, {}, comptime std.sort.desc(i32));
+    std.mem.sort(i32, basinSizes.items, {}, comptime std.sort.desc(i32));
 
     var totalSize: i32 = 1;
     for (basinSizes.items[0..3]) |i| {
@@ -101,7 +100,7 @@ pub fn main() anyerror!void {
     var input = try common.readFile(allocator, "data/day9input.txt");
     var lowPoints = try findLowPoints(allocator, input);
     print("Day 9: risk = {d}\n", .{calculateRisk(lowPoints)});
-    print("Day 9: largest basins = {d}\n", .{findThreeLargestBasins(allocator, input, lowPoints)});
+    print("Day 9: largest basins = {!d}\n", .{findThreeLargestBasins(allocator, input, lowPoints)});
 }
 
 // TESTING
@@ -115,6 +114,7 @@ const EXAMPLE =
 ;
 
 test "Example" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator, EXAMPLE);
     defer {
         for (input) |i| test_allocator.free(i);
@@ -131,6 +131,7 @@ test "Example" {
 }
 
 test "Equal pair" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator,
         \\499
         \\989

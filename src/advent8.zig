@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 // HELPERS
@@ -36,8 +35,8 @@ fn computeDigits(allocator: Allocator, line: []const u8) !i32 {
     try mapSignals(allocator, signals.items, &mapping);
 
     var invertedMapping: [7]u8 = undefined;
-    for (mapping) |m, idx| {
-        invertedMapping[m - 'a'] = @intCast(u8, idx);
+    for (mapping, 0..) |m, idx| {
+        invertedMapping[m - 'a'] = @as(u8, @intCast(idx));
     }
 
     var result: i32 = 0;
@@ -45,12 +44,12 @@ fn computeDigits(allocator: Allocator, line: []const u8) !i32 {
     while (it2.next()) |v| {
         var value: i32 = 0;
         for (v) |c| {
-            var idx: u3 = @intCast(u3, 6 - (invertedMapping[c - 'a']));
+            var idx: u3 = @as(u3, @intCast(6 - (invertedMapping[c - 'a'])));
             value += @as(u8, 1) << idx;
         }
-        for (SIGNAL_LOOKUP) |l, idx| {
+        for (SIGNAL_LOOKUP, 0..) |l, idx| {
             if (l == value) {
-                result = result * 10 + @intCast(i32, idx);
+                result = result * 10 + @as(i32, @intCast(idx));
                 break;
             }
         }
@@ -93,7 +92,7 @@ fn uniqueSignal(a: []const u8, b: []const u8) !u8 {
     return error.InvalidData;
 }
 
-fn commonSignal(items: [][]const u8) ![4]u8 {
+fn commonSignal(items: []const []const u8) ![4]u8 {
     var result: [4]u8 = [_]u8{0} ** 4;
     var segments: [7]u4 = [_]u4{0} ** 7;
     for (items) |i| {
@@ -102,12 +101,12 @@ fn commonSignal(items: [][]const u8) ![4]u8 {
         }
     }
     var ridx: u4 = 0;
-    for (segments) |s, idx| {
+    for (segments, 0..) |s, idx| {
         if (s == items.len) {
             if (ridx == 4) {
                 return error.InvalidData;
             }
-            result[ridx] = @intCast(u8, idx) + 'a';
+            result[ridx] = @as(u8, @intCast(idx)) + 'a';
             ridx += 1;
         }
     }
@@ -181,7 +180,7 @@ pub fn main() anyerror!void {
 
     var input = try common.readFile(allocator, "data/day8input.txt");
     print("Day 8: unique = {d}\n", .{countUniqueOutput(input)});
-    print("Day 8: total = {d}\n", .{computeAnswer(allocator, input)});
+    print("Day 8: total = {!d}\n", .{computeAnswer(allocator, input)});
 }
 
 // TESTING
@@ -204,6 +203,7 @@ const LONG_EXAMPLE =
 ;
 
 test "Example Unique Output" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator, LONG_EXAMPLE);
     defer {
         for (input) |i| test_allocator.free(i);
@@ -219,6 +219,7 @@ test "Unique Signal" {
 }
 
 test "Mapping Signal Lines" {
+    const test_allocator = std.testing.test_allocator;
     const signals = [_][]const u8{ "acedgfb", "cdfbe", "gcdfa", "fbcad", "dab", "cefabd", "cdfgeb", "eafb", "cagedb", "ab" };
 
     var mapping: [7]u8 = [_]u8{0} ** 7;
@@ -234,6 +235,7 @@ test "Mapping Signal Lines" {
 }
 
 test "Single Example Answer" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator, SINGLE_EXAMPLE);
     defer {
         for (input) |i| test_allocator.free(i);
@@ -245,6 +247,7 @@ test "Single Example Answer" {
 }
 
 test "Long Example Answer" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator, LONG_EXAMPLE);
     defer {
         for (input) |i| test_allocator.free(i);

@@ -51,9 +51,10 @@ fn readLines(allocator: std.mem.Allocator, reader: anytype) anyerror![][]const u
 // TESTING
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 
 test "Read File" {
+    const test_allocator = std.testing.allocator;
+
     var list = try readFile(test_allocator, "data/day1input.txt");
     defer {
         for (list) |i| test_allocator.free(i);
@@ -64,6 +65,8 @@ test "Read File" {
 }
 
 test "Read Input" {
+    const test_allocator = std.testing.allocator;
+
     var list = try readInput(test_allocator,
         \\The quick brown fox
         \\jumps over the lazy

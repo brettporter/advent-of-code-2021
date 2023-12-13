@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 // HELPERS
@@ -120,7 +119,7 @@ pub fn main() anyerror!void {
 
     var input = try common.readFile(allocator, "data/day11input.txt");
     print("Day 11: total flashes = {d}\n", .{processSteps(try parseArrayLines(allocator, input), 10, 100)});
-    print("Day 11: sync = {d}\n", .{findSimultaneousFlash(try parseArrayLines(allocator, input), 10)});
+    print("Day 11: sync = {!d}\n", .{findSimultaneousFlash(try parseArrayLines(allocator, input), 10)});
 }
 
 // TESTING
@@ -139,6 +138,7 @@ const EXAMPLE =
 ;
 
 test "Example Step 1" {
+    const test_allocator = std.testing.test_allocator;
     const input = try parseArray(test_allocator, EXAMPLE);
 
     const step1 = try parseArray(test_allocator,
@@ -164,6 +164,7 @@ test "Example Step 1" {
 }
 
 test "Example Step 10" {
+    const test_allocator = std.testing.test_allocator;
     const input = try parseArray(test_allocator, EXAMPLE);
 
     const step10 = try parseArray(test_allocator,
@@ -190,6 +191,7 @@ test "Example Step 10" {
 }
 
 test "Example Step 100" {
+    const test_allocator = std.testing.test_allocator;
     const input = try parseArray(test_allocator, EXAMPLE);
 
     const step100 = try parseArray(test_allocator,
@@ -216,6 +218,7 @@ test "Example Step 100" {
 }
 
 test "Example Simultaneous Flash" {
+    const test_allocator = std.testing.test_allocator;
     const input = try parseArray(test_allocator, EXAMPLE);
     defer test_allocator.free(input);
 
@@ -224,7 +227,7 @@ test "Example Simultaneous Flash" {
 }
 
 fn printMatrix(input: []u8, width: usize) void {
-    for (input) |v, i| {
+    for (input, 0..) |v, i| {
         print("{d: >3}", .{v});
         if (i % width == width - 1) print("\n", .{});
     }
@@ -232,6 +235,7 @@ fn printMatrix(input: []u8, width: usize) void {
 }
 
 test "Small time flash" {
+    const test_allocator = std.testing.test_allocator;
     const input = try parseArray(test_allocator,
         \\11111
         \\19991

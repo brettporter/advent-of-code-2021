@@ -5,7 +5,6 @@ const Allocator = std.mem.Allocator;
 const common = @import("common.zig");
 
 const expect = std.testing.expect;
-const test_allocator = std.testing.allocator;
 const print = std.debug.print;
 
 const BingoCard = struct {
@@ -18,8 +17,8 @@ const BingoCard = struct {
         var rowTotals: [5]i8 = [_]i8{0} ** 5;
         var colTotals: [5]i8 = [_]i8{0} ** 5;
 
-        for (self.values) |row, rowIdx| {
-            for (row) |v, colIdx| {
+        for (self.values, 0..) |row, rowIdx| {
+            for (row, 0..) |v, colIdx| {
                 if (v == num) {
                     self.marked[rowIdx][colIdx] = true;
                 }
@@ -46,8 +45,8 @@ const BingoCard = struct {
 
     pub fn unmarkedTotal(self: *const BingoCard) i32 {
         var sum: i32 = 0;
-        for (self.marked) |row, rowIdx| {
-            for (row) |v, colIdx| {
+        for (self.marked, 0..) |row, rowIdx| {
+            for (row, 0..) |v, colIdx| {
                 if (!v) {
                     sum += self.values[rowIdx][colIdx];
                 }
@@ -141,7 +140,7 @@ fn readBingoGame(allocator: Allocator, lines: []const []const u8) anyerror!Bingo
         }
         try cards.append(card);
     }
-    return BingoGame.init(allocator, numbers.toOwnedSlice(), cards.toOwnedSlice());
+    return BingoGame.init(allocator, try numbers.toOwnedSlice(), try cards.toOwnedSlice());
 }
 
 pub fn main() anyerror!void {
@@ -151,7 +150,7 @@ pub fn main() anyerror!void {
 
     var list = try common.readFile(allocator, "data/day4input.txt");
 
-    var game = try readBingoGame(test_allocator, list);
+    var game = try readBingoGame(allocator, list);
     defer game.deinit();
 
     var result = try game.playGame();
@@ -162,6 +161,7 @@ pub fn main() anyerror!void {
 }
 
 test "Example" {
+    const test_allocator = std.testing.test_allocator;
     const input = try common.readInput(test_allocator,
         \\7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
         \\
