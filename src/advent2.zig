@@ -17,7 +17,15 @@ const Position = struct {
         return self.position * self.depth;
     }
 
-    fn followDirection(self: *Position, direction: Movement) void {
+    fn followDirection1(self: *Position, direction: Movement) void {
+        switch (direction) {
+            .forward => |forward| self.position += forward,
+            .up => |up| self.depth -= up,
+            .down => |down| self.depth += down,
+        }
+    }
+
+    fn followDirection2(self: *Position, direction: Movement) void {
         switch (direction) {
             .forward => |forward| {
                 self.position += forward;
@@ -53,10 +61,17 @@ pub fn main() anyerror!void {
 
     var result = Position{};
     for (list) |item| {
-        result.followDirection(try parseDirection(item));
+        result.followDirection1(try parseDirection(item));
     }
 
-    print("Day 2: position = {d}, depth = {d}, answer = {d}\n", .{ result.position, result.depth, result.answer() });
+    print("Day 2 part 1: position = {d}, depth = {d}, answer = {d}\n", .{ result.position, result.depth, result.answer() });
+
+    result = Position{};
+    for (list) |item| {
+        result.followDirection2(try parseDirection(item));
+    }
+
+    print("Day 2 part 2: position = {d}, depth = {d}, answer = {d}\n", .{ result.position, result.depth, result.answer() });
 }
 
 test "Parse directions" {
@@ -73,12 +88,24 @@ test "Parse directions" {
     try std.testing.expectError(error.InvalidCharacter, parseDirection("down periscope"));
 }
 
-test "Example directions" {
+test "Example directions Part 1" {
     const directions = [_]Movement{ .{ .forward = 5 }, .{ .down = 5 }, .{ .forward = 8 }, .{ .up = 3 }, .{ .down = 8 }, .{ .forward = 2 } };
 
     var result = Position{};
     for (directions) |d| {
-        result.followDirection(d);
+        result.followDirection1(d);
+    }
+    try expect(result.position == 15);
+    try expect(result.depth == 10);
+    try expect(result.answer() == 150);
+}
+
+test "Example directions Part 2" {
+    const directions = [_]Movement{ .{ .forward = 5 }, .{ .down = 5 }, .{ .forward = 8 }, .{ .up = 3 }, .{ .down = 8 }, .{ .forward = 2 } };
+
+    var result = Position{};
+    for (directions) |d| {
+        result.followDirection2(d);
     }
     try expect(result.position == 15);
     try expect(result.depth == 60);

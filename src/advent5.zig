@@ -94,7 +94,7 @@ fn readPoint(str: []const u8) anyerror!Point {
     return p;
 }
 
-fn parseVentLines(allocator: Allocator, input: [][]const u8) anyerror![]const VentLine {
+fn parseVentLines(allocator: Allocator, input: [][]const u8, exclude_diagonal: bool) anyerror![]const VentLine {
     var list = ArrayList(VentLine).init(allocator);
     defer list.deinit();
     for (input) |l| {
@@ -103,6 +103,12 @@ fn parseVentLines(allocator: Allocator, input: [][]const u8) anyerror![]const Ve
             .start = try readPoint(it.next().?),
             .end = try readPoint(it.next().?),
         };
+
+        if (exclude_diagonal) {
+            // currently only consider horizontal and vertical lines
+            if (ventLine.start.x != ventLine.end.x and ventLine.start.y != ventLine.end.y) continue;
+        }
+
         try list.append(ventLine);
     }
     return list.toOwnedSlice();
@@ -116,12 +122,19 @@ pub fn main() anyerror!void {
     const allocator = arena.allocator();
 
     var input = try common.readFile(allocator, "data/day5input.txt");
-    var ventLines = try parseVentLines(allocator, input);
+    var ventLines = try parseVentLines(allocator, input, true);
 
     var map = Map{};
     map.applyVentLines(ventLines);
 
-    print("Day 5: overlap = {d}\n", .{map.countOverlap()});
+    print("Day 5 part 1: overlap = {d}\n", .{map.countOverlap()});
+
+    ventLines = try parseVentLines(allocator, input, false);
+
+    map = Map{};
+    map.applyVentLines(ventLines);
+
+    print("Day 5 part 2: overlap = {d}\n", .{map.countOverlap()});
 }
 
 // TESTING
